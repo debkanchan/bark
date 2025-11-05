@@ -55,14 +55,13 @@ runs:
         if ! command -v bark &> /dev/null; then
           BARK_CMD="$HOME/go/bin/bark"
         fi
-        
-        $BARK_CMD -format ${{ inputs.format }} ${{ inputs.path }}
-        exit_code=$?
-        
+
+        $BARK_CMD -format ${{ inputs.format }} ${{ inputs.path }} || exit_code=$?
+        exit_code=${exit_code:-0}
+
         if [ "${{ inputs.fail-on-findings }}" = "false" ]; then
           echo "ℹ️  Bark scan completed (fail-on-findings: false)"
           exit 0
         fi
-        
-        exit $exit_code
 
+        exit $exit_code
