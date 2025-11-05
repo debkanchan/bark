@@ -33,6 +33,7 @@ func NewRegistry() *Registry {
 		languages.Rust(),
 		languages.Zig(),
 		languages.Kotlin(),
+		languages.Docker(),
 	}
 
 	// Build extension lookup map

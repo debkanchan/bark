@@ -44,7 +44,7 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
 - 🌳 **Tree-sitter powered**: Accurate parsing using tree-sitter grammars
 - 🔧 **Modular architecture**: Separated core logic for easy integration
 - 📋 **Multiple output formats**: Text for CLI, JSON for CI/CD pipelines
-- 🎯 **Wide language support**: 17 languages including Go, JavaScript, TypeScript, Python, Java, Kotlin, C, C++, Bash, Rust, Zig, Lua, HCL, YAML, XML, TOML, JSON
+- 🎯 **Wide language support**: 18 languages including Go, JavaScript, TypeScript, Python, Java, Kotlin, C, C++, Bash, Rust, Zig, Lua, HCL, YAML, Docker, XML, TOML, JSON
 - 🎬 **GitHub Action**: One-line integration for your CI/CD pipeline
 - 🪝 **Git Hooks**: Automatic pre-push hook installation
 
@@ -328,25 +328,26 @@ steps:
 
 ## Supported Languages
 
-| Language   | Extensions                                   |
-| ---------- | -------------------------------------------- |
-| Go         | `.go`                                        |
-| JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs`                |
-| TypeScript | `.ts`, `.tsx`                                |
-| Python     | `.py`, `.pyw`                                |
-| Java       | `.java`                                      |
-| Kotlin     | `.kt`, `.kts`                                |
-| C          | `.c`, `.h`                                   |
-| C++        | `.cpp`, `.cc`, `.cxx`, `.hpp`, `.hh`, `.hxx` |
-| Bash       | `.sh`, `.bash`, `.env`, `.env.*`             |
-| Rust       | `.rs`                                        |
-| Zig        | `.zig`                                       |
-| Lua        | `.lua`                                       |
-| HCL        | `.hcl`, `.tf`, `.tfvars`                     |
-| YAML       | `.yml`, `.yaml`                              |
-| XML        | `.xml`                                       |
-| TOML       | `.toml`                                      |
-| JSON       | `.json`, `.jsonc`                            |
+| Language   | Extensions                                                 |
+| ---------- | -----------------------------------------------------------|
+| Go         | `.go`                                                      |
+| JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs`                              |
+| TypeScript | `.ts`, `.tsx`                                              |
+| Python     | `.py`, `.pyw`                                              |
+| Java       | `.java`                                                    |
+| Kotlin     | `.kt`, `.kts`                                              |
+| C          | `.c`, `.h`                                                 |
+| C++        | `.cpp`, `.cc`, `.cxx`, `.hpp`, `.hh`, `.hxx`               |
+| Bash       | `.sh`, `.bash`, `.env`, `.env.*`                           |
+| Rust       | `.rs`                                                      |
+| Zig        | `.zig`                                                     |
+| Lua        | `.lua`                                                     |
+| HCL        | `.hcl`, `.tf`, `.tfvars`                                   |
+| YAML       | `.yml`, `.yaml`                                            |
+| Docker     | `dockerfile`, `Dockerfile`, `*.dockerfile`, `*.Dockerfile` |
+| XML        | `.xml`                                                     |
+| TOML       | `.toml`                                                    |
+| JSON       | `.json`, `.jsonc`                                          |
 
 ## Architecture
 

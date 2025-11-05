@@ -84,6 +84,25 @@ DATABASE_URL=localhost`,
 API_KEY=${API_KEY}`,
 			expectedCount: 0,
 		},
+		{
+			name:     "Dockerfile with BARK comment",
+			filename: "Dockerfile",
+			content: `# BARK: Update base image to latest LTS version
+FROM node:18
+
+# Set working directory
+WORKDIR /app
+`,
+			expectedCount: 1,
+		},
+		{
+			name:     "Dockerfile without BARK",
+			filename: "dockerfile",
+			content: `FROM node:18
+WORKDIR /app
+`,
+			expectedCount: 0,
+		},
 	}
 
 	for _, tt := range tests {

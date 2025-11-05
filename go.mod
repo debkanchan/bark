@@ -3,6 +3,7 @@ module github.com/debkanchan/bark
 go 1.24.5
 
 require (
+	github.com/debkanchan/tree-sitter-dockerfile v0.2.2
 	github.com/tree-sitter-grammars/tree-sitter-hcl v1.2.0
 	github.com/tree-sitter-grammars/tree-sitter-kotlin v1.1.0
 	github.com/tree-sitter-grammars/tree-sitter-lua v0.4.0
