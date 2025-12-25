@@ -46,7 +46,7 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
 - 📋 **Multiple output formats**: Text for CLI, JSON for CI/CD pipelines
 - 🎯 **Wide language support**: 18 languages including Go, JavaScript, TypeScript, Python, Java, Kotlin, C, C++, Bash, Rust, Zig, Lua, HCL, YAML, Docker, XML, TOML, JSON
 - 🎬 **GitHub Action**: One-line integration for your CI/CD pipeline
-- 🪝 **Git Hooks**: Automatic pre-push hook installation
+- 🪝 **Git Hooks**: Automatic pre-push and pre-commit hook installation (works with GitHub Desktop!)
 
 ## Installation
 
@@ -68,17 +68,42 @@ go build -o bark ./cmd/bark
 
 ### Recommended: Install Git Hook (Set and Forget!)
 
-The easiest way to use Bark is to install it as a git pre-push hook. This automatically prevents you from pushing code with BARK comments:
+The easiest way to use Bark is to install it as a git hook. This automatically prevents you from committing or pushing code with BARK comments:
+
+#### For GitHub Desktop Users (Pre-Commit Hook)
+
+If you use GitHub Desktop or want to catch BARK comments at commit time:
 
 ```bash
 # Install bark
 go install github.com/debkanchan/bark/cmd/bark@latest
 
-# Install the git hook (one-time setup)
+# Install the pre-commit hook (works with GitHub Desktop!)
+bark git-hook install-commit
+```
+
+**That's it!** Now bark runs automatically before every commit and blocks commits if BARK comments are found. This works with GitHub Desktop, VS Code, and all other Git clients!
+
+#### For CLI Git Users (Pre-Push Hook)
+
+If you primarily use command-line Git and prefer to catch BARK comments at push time:
+
+```bash
+# Install bark
+go install github.com/debkanchan/bark/cmd/bark@latest
+
+# Install the pre-push hook (one-time setup)
 bark git-hook install
 ```
 
 **That's it!** Now bark runs automatically before every `git push` and blocks the push if BARK comments are found.
+
+#### Why Two Options?
+
+- **Pre-commit hook** (`install-commit`): Catches issues earlier (at commit time). Works with GitHub Desktop and all Git clients.
+- **Pre-push hook** (`install`): Only blocks at push time. Allows you to make local commits with BARK comments for work-in-progress.
+
+**You can install both hooks** if you want double protection!
 
 ### Add BARK Comments to Your Code
 
@@ -173,7 +198,31 @@ JSON output example:
 
 ### Git Hook Commands
 
-Bark can automatically install a git pre-push hook to prevent BARK comments from being pushed:
+Bark supports both pre-commit and pre-push hooks:
+
+#### Pre-Commit Hook (Recommended for GitHub Desktop)
+
+**Install pre-commit hook:**
+
+```bash
+bark git-hook install-commit
+```
+
+This will:
+- ✅ Create or update `.git/hooks/pre-commit`
+- ✅ Safely merge with existing hooks using markers
+- ✅ Back up any existing hook before modification
+- ✅ Run bark automatically before each commit
+- ✅ Block commits if BARK comments are found
+- ✅ **Works with GitHub Desktop, VS Code, and all Git clients!**
+
+**Uninstall pre-commit hook:**
+
+```bash
+bark git-hook uninstall-commit
+```
+
+#### Pre-Push Hook (For CLI Git Users)
 
 **Install pre-push hook:**
 
@@ -194,14 +243,9 @@ This will:
 bark git-hook uninstall
 ```
 
-This will:
-- ✅ Remove only the bark section (preserves other hooks)
-- ✅ Back up the hook before modification
-- ✅ Delete the file if empty after removal
+#### How it works
 
-**How it works:**
-
-Bark uses markers (`# BEGIN bark hook` / `# END bark hook`) to identify its section, allowing it to coexist with other git hooks safely.
+Bark uses markers (`# BEGIN bark hook` / `# END bark hook`) to identify its section, allowing it to coexist with other git hooks safely. Both hooks can be installed simultaneously for double protection!
 
 ### Exit Codes
 
