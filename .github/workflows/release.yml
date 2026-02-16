@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 permissions:
   contents: write
@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24.5'
-      
+          go-version: "1.24.5"
+
       - name: Run all tests
         run: go test -v ./...
-      
+
       - name: Run tests with coverage
         run: go test -cover ./...
 
@@ -42,14 +42,14 @@ jobs:
             goarch: arm64
           - goos: windows
             goarch: amd64
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24.5'
-      
+          go-version: "1.24.5"
+
       - name: Build binary
         env:
           GOOS: ${{ matrix.goos }}
@@ -59,22 +59,22 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             OUTPUT_NAME="${OUTPUT_NAME}.exe"
           fi
-          
+
           go build -ldflags="-s -w" -o "$OUTPUT_NAME" ./cmd/bark
-          
+
           # Create checksum for binary
           sha256sum "$OUTPUT_NAME" > "${OUTPUT_NAME}.sha256"
-          
+
           # Create tar.gz archive
           ARCHIVE_NAME="bark-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
           tar -czf "$ARCHIVE_NAME" "$OUTPUT_NAME"
-          
+
           # Create checksum for archive
           sha256sum "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
-          
+
           echo "Built: $OUTPUT_NAME"
           ls -lh "$OUTPUT_NAME" "$ARCHIVE_NAME"
-      
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -89,23 +89,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
-      
+
       - name: Display structure
         run: |
           echo "Downloaded artifacts:"
           ls -R ./artifacts
-      
+
       - name: Prepare release files
         run: |
           mkdir -p release
           find ./artifacts -type f -exec cp {} ./release/ \;
           ls -lh ./release
-      
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -115,11 +115,11 @@ jobs:
           files: release/*
           body: |
             ## 🐕 Bark Release ${{ github.ref_name }}
-            
+
             Cross-platform binaries for detecting BARK comments in your code.
-            
+
             ### 📦 Installation
-            
+
             #### Linux (AMD64)
             ```bash
             curl -L https://github.com/debkanchan/bark/releases/download/${{ github.ref_name }}/bark-linux-amd64.tar.gz -o bark.tar.gz
@@ -127,7 +127,7 @@ jobs:
             chmod +x bark-linux-amd64
             sudo mv bark-linux-amd64 /usr/local/bin/bark
             ```
-            
+
             #### macOS (Apple Silicon - M1/M2/M3)
             ```bash
             curl -L https://github.com/debkanchan/bark/releases/download/${{ github.ref_name }}/bark-darwin-arm64.tar.gz -o bark.tar.gz
@@ -135,7 +135,7 @@ jobs:
             chmod +x bark-darwin-arm64
             sudo mv bark-darwin-arm64 /usr/local/bin/bark
             ```
-            
+
             #### macOS (Intel)
             ```bash
             curl -L https://github.com/debkanchan/bark/releases/download/${{ github.ref_name }}/bark-darwin-amd64.tar.gz -o bark.tar.gz
@@ -143,7 +143,7 @@ jobs:
             chmod +x bark-darwin-amd64
             sudo mv bark-darwin-amd64 /usr/local/bin/bark
             ```
-            
+
             #### Windows (PowerShell)
             ```powershell
             # Download tar.gz
@@ -153,7 +153,7 @@ jobs:
             # Move to a directory in your PATH
             Move-Item bark-windows-amd64.exe C:\Windows\System32\bark.exe
             ```
-            
+
             Or download raw binary directly:
             ```bash
             # Linux AMD64 (direct binary)
@@ -161,31 +161,31 @@ jobs:
             chmod +x bark
             sudo mv bark /usr/local/bin/
             ```
-            
+
             #### Or install from source
             ```bash
             go install github.com/debkanchan/bark/cmd/bark@${{ github.ref_name }}
             ```
-            
+
             ### ✅ Verify Installation
             ```bash
             bark --help
             bark .
             ```
-            
+
             ### 🔒 Verify Checksums
             Download the `.sha256` file and verify:
             ```bash
             sha256sum -c bark-linux-amd64.sha256
             ```
-            
+
             ### 📋 Supported Platforms
             - Linux AMD64
             - Linux ARM64
             - macOS AMD64 (Intel)
             - macOS ARM64 (Apple Silicon)
             - Windows AMD64
-            
+
             ---
-            
+
             **Full documentation:** https://github.com/debkanchan/bark#readme

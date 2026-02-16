@@ -3,17 +3,16 @@ name: test-workflow
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       # BARK: Replace with production values
       - name: Run tests
         env:
-          API_KEY: "test-key-123"  # BARK hardcoded test key
+          API_KEY: "test-key-123" # BARK hardcoded test key
         run: echo "Testing"
-

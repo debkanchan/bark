@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,33 +13,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-      
+          go-version: 1.24.5
+
       - name: Run tests
         run: go test -v ./...
-      
+
       - name: Run tests with coverage
         run: go test -cover ./...
-  
+
   build:
     name: Build
     runs-on: ${{ matrix.os }}
+    env:
+      CGO_ENABLED: 1
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-      
+          go-version: 1.24.5
+
       - name: Build
         run: go build -o bark ./cmd/bark
-      
+
       - name: Test binary exists
         shell: bash
         run: |
@@ -49,4 +51,3 @@ jobs:
             echo "❌ Binary not found"
             exit 1
           fi
-

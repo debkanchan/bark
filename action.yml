@@ -1,28 +1,28 @@
-name: '🐕 Bark! - Save yourself from production embarrassments'
-description: 'Check for BARK comments in your code before merging'
-author: 'debkanchan'
+name: "🐕 Bark! - Save yourself from production embarrassments"
+description: "Check for BARK comments in your code before merging"
+author: "debkanchan"
 
 branding:
-  icon: 'alert-circle'
-  color: 'orange'
+  icon: "alert-circle"
+  color: "orange"
 
 inputs:
   path:
-    description: 'Path to scan for BARK comments'
+    description: "Path to scan for BARK comments"
     required: false
-    default: '.'
+    default: "."
   format:
-    description: 'Output format (text or json)'
+    description: "Output format (text or json)"
     required: false
-    default: 'text'
+    default: "text"
   fail-on-findings:
-    description: 'Fail the build if BARK comments are found'
+    description: "Fail the build if BARK comments are found"
     required: false
-    default: 'true'
+    default: "true"
   version:
-    description: 'Version of bark to install (latest or specific version like v1.0.0)'
+    description: "Version of bark to install (latest or specific version like v1.0.0)"
     required: false
-    default: 'latest'
+    default: "latest"
 
 runs:
   using: "composite"
@@ -30,8 +30,8 @@ runs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24.5'
-    
+        go-version: "1.24.5"
+
     - name: Install Bark
       shell: bash
       run: |
@@ -41,11 +41,11 @@ runs:
         else
           go install github.com/debkanchan/bark/cmd/bark@${{ inputs.version }}
         fi
-        
+
         # Add Go bin to PATH
         echo "$HOME/go/bin" >> $GITHUB_PATH
         echo "✅ Bark installed successfully"
-    
+
     - name: Run Bark
       shell: bash
       run: |

@@ -2,10 +2,10 @@ name: Test Bark Action
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Allows manual triggering from GitHub UI
+    branches: [main]
+  workflow_dispatch: # Allows manual triggering from GitHub UI
 
 jobs:
   test-action-default:
@@ -13,46 +13,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Bark Action (should find BARK comments in testdata)
         uses: ./
         with:
-          path: 'testdata'
-          fail-on-findings: 'false'  # Don't fail, we expect to find comments
-      
+          path: "testdata"
+          fail-on-findings: "false" # Don't fail, we expect to find comments
+
   test-action-json:
     name: Test Action (JSON Output)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Bark Action with JSON format
         uses: ./
         with:
-          path: 'testdata'
-          format: 'json'
-          fail-on-findings: 'false'
-  
+          path: "testdata"
+          format: "json"
+          fail-on-findings: "false"
+
   test-action-clean-path:
     name: Test Action (Clean Path - Should Pass)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Bark on testdata/clean (should have no BARK comments)
         uses: ./
         with:
-          path: 'testdata/clean'
-          fail-on-findings: 'true'
-  
+          path: "testdata/clean"
+          fail-on-findings: "true"
+
   test-action-full-scan:
     name: Test Action (Full Repository)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Bark on entire repository
         uses: ./
         with:
-          fail-on-findings: 'false'
-
+          fail-on-findings: "false"

@@ -4,7 +4,6 @@
   "name": "clean-config",
   "settings": {
     "enabled": true,
-    "timeout": 5000
-  }
+    "timeout": 5000,
+  },
 }
-

@@ -1,8 +1,8 @@
 package languages
 
 import (
-	sitter "github.com/tree-sitter/go-tree-sitter"
 	tree_sitter "github.com/tree-sitter-grammars/tree-sitter-kotlin/bindings/go"
+	sitter "github.com/tree-sitter/go-tree-sitter"
 )
 
 func Kotlin() Language {
