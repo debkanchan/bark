@@ -30,18 +30,32 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Bark - Detect BARK comments in your code\n\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n")
-		fmt.Fprintf(os.Stderr, "  bark [options] [path]              Scan for BARK comments\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook install              Install git pre-push hook\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook uninstall            Uninstall git pre-push hook\n\n")
+		fmt.Fprintf(os.Stderr, "  bark [options] [path...]            Scan for BARK comments\n")
+		fmt.Fprintf(os.Stderr, "  bark git-hook install               Install git pre-push hook\n")
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook uninstall             Uninstall git pre-push hook\n\n",
+		)
 		fmt.Fprintf(os.Stderr, "Arguments:\n")
-		fmt.Fprintf(os.Stderr, "  path    Directory or file to scan (default: current directory)\n\n")
+		fmt.Fprintf(
+			os.Stderr,
+			"  path    Directories or files to scan (default: current directory)\n",
+		)
+		fmt.Fprintf(os.Stderr, "          Multiple paths can be provided to scan them all\n\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  bark                    # Scan current directory\n")
-		fmt.Fprintf(os.Stderr, "  bark ./src              # Scan src directory\n")
-		fmt.Fprintf(os.Stderr, "  bark -format json .     # Scan current directory with JSON output\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook install   # Install pre-push hook\n")
+		fmt.Fprintf(os.Stderr, "  bark                               # Scan current directory\n")
+		fmt.Fprintf(os.Stderr, "  bark ./src                          # Scan src directory\n")
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark main.go utils.go lib/          # Scan specific files and directories\n",
+		)
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark -format json .                 # Scan current directory with JSON output\n",
+		)
+		fmt.Fprintf(os.Stderr, "  bark git-hook install               # Install pre-push hook\n")
 		fmt.Fprintf(os.Stderr, "\nExit codes:\n")
 		fmt.Fprintf(os.Stderr, "  0 - No BARK comments found\n")
 		fmt.Fprintf(os.Stderr, "  1 - BARK comments found\n")
@@ -72,18 +86,18 @@ func main() {
 		return
 	}
 
-	// Determine the path to scan
-	// Priority: positional argument > -p flag > current directory
-	var scanPath string
+	// Determine paths to scan
+	// Priority: positional arguments > -p flag > current directory
+	var scanPaths []string
 	if flag.NArg() > 0 {
-		// Use positional argument
-		scanPath = flag.Arg(0)
+		// Use all positional arguments
+		scanPaths = flag.Args()
 	} else if *pathFlag != "" {
 		// Use -p flag
-		scanPath = *pathFlag
+		scanPaths = []string{*pathFlag}
 	} else {
 		// Default to current directory
-		scanPath = "."
+		scanPaths = []string{"."}
 	}
 
 	// Validate format
@@ -98,16 +112,18 @@ func main() {
 		os.Exit(exitError)
 	}
 
-	// Validate path exists
-	_, err := os.Stat(scanPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Cannot access path '%s': %v\n", scanPath, err)
-		os.Exit(exitError)
+	// Validate all paths exist
+	for _, p := range scanPaths {
+		_, err := os.Stat(p)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Cannot access path '%s': %v\n", p, err)
+			os.Exit(exitError)
+		}
 	}
 
-	// Scan directory or file
+	// Scan directories or files
 	s := scanner.NewScanner()
-	result := s.Scan(scanPath)
+	result := s.ScanPaths(scanPaths)
 
 	// Format and print results
 	output, err := formatter.Format(result)
@@ -191,7 +207,8 @@ func installGitHook() {
 	var newContent string
 
 	// Check if bark section already exists
-	if strings.Contains(existingContent, hookBeginMarker) && strings.Contains(existingContent, hookEndMarker) {
+	if strings.Contains(existingContent, hookBeginMarker) &&
+		strings.Contains(existingContent, hookEndMarker) {
 		// Replace existing bark section
 		lines := strings.Split(existingContent, "\n")
 		var result []string
@@ -257,7 +274,8 @@ func uninstallGitHook() {
 	hookContent := string(content)
 
 	// Check if bark section exists
-	if !strings.Contains(hookContent, hookBeginMarker) || !strings.Contains(hookContent, hookEndMarker) {
+	if !strings.Contains(hookContent, hookBeginMarker) ||
+		!strings.Contains(hookContent, hookEndMarker) {
 		fmt.Println("ℹ️  No bark hook found in pre-push - nothing to uninstall")
 		os.Exit(exitSuccess)
 	}

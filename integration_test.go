@@ -112,3 +112,40 @@ func TestIntegrationFull(t *testing.T) {
 
 	t.Logf("Found %d total BARK comments in testdata (dirty + clean)", len(findings))
 }
+
+func TestIntegrationMultiplePaths(t *testing.T) {
+	dirtyPath := filepath.Join(".", "testdata", "dirty")
+	cleanPath := filepath.Join(".", "testdata", "clean")
+
+	// Check if both directories exist
+	if _, err := os.Stat(dirtyPath); os.IsNotExist(err) {
+		t.Skip("testdata/dirty directory not found")
+	}
+	if _, err := os.Stat(cleanPath); os.IsNotExist(err) {
+		t.Skip("testdata/clean directory not found")
+	}
+
+	s := scanner.NewScanner()
+
+	// ScanPaths with both dirty and clean should produce the same findings as
+	// scanning the parent testdata directory, since clean has no BARK comments.
+	resultMulti := s.ScanPaths([]string{dirtyPath, cleanPath})
+	resultSingle := s.Scan(dirtyPath)
+
+	multiFindings := resultMulti.GetFindings()
+	singleFindings := resultSingle.GetFindings()
+
+	if len(multiFindings) == 0 {
+		t.Error("Expected to find BARK comments when scanning dirty + clean paths")
+	}
+
+	if len(multiFindings) != len(singleFindings) {
+		t.Errorf(
+			"ScanPaths([dirty, clean]) should find same count as Scan(dirty): multi=%d, single=%d",
+			len(multiFindings),
+			len(singleFindings),
+		)
+	}
+
+	t.Logf("Found %d BARK comments via multi-path scan", len(multiFindings))
+}

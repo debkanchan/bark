@@ -31,39 +31,48 @@ func NewScanner() *Scanner {
 	}
 }
 
-// Scan recursively scans a directory for BARK comments
+// Scan recursively scans a single path for BARK comments.
+// It is a convenience wrapper around ScanPaths.
 func (s *Scanner) Scan(rootPath string) *results.ScanResult {
+	return s.ScanPaths([]string{rootPath})
+}
+
+// ScanPaths scans multiple paths (files or directories) for BARK comments.
+// Files from all paths are collected and then processed concurrently in a
+// single worker pool.
+func (s *Scanner) ScanPaths(paths []string) *results.ScanResult {
 	result := results.NewScanResult()
 
-	// Collect all files to scan
+	// Collect all files to scan from every provided path
 	filesToScan := make([]string, 0)
 
-	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			result.AddError(fmt.Errorf("error accessing path %s: %w", path, err))
-			return nil // Continue walking
-		}
+	for _, rootPath := range paths {
+		err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				result.AddError(fmt.Errorf("error accessing path %s: %w", path, err))
+				return nil // Continue walking
+			}
 
-		// Skip directories
-		if info.IsDir() {
-			// Skip hidden directories and common non-source directories
-			if info.Name() != "." && len(info.Name()) > 0 && info.Name()[0] == '.' {
-				return filepath.SkipDir
+			// Skip directories
+			if info.IsDir() {
+				// Skip hidden directories and common non-source directories
+				if info.Name() != "." && len(info.Name()) > 0 && info.Name()[0] == '.' {
+					return filepath.SkipDir
+				}
+				if info.Name() == "node_modules" || info.Name() == "vendor" ||
+					info.Name() == ".git" {
+					return filepath.SkipDir
+				}
+				return nil
 			}
-			if info.Name() == "node_modules" || info.Name() == "vendor" || info.Name() == ".git" {
-				return filepath.SkipDir
-			}
+
+			filesToScan = append(filesToScan, path)
+
 			return nil
+		})
+		if err != nil {
+			result.AddError(fmt.Errorf("error walking path %s: %w", rootPath, err))
 		}
-
-		filesToScan = append(filesToScan, path)
-
-		return nil
-	})
-
-	if err != nil {
-		result.AddError(fmt.Errorf("error walking directory: %w", err))
-		return result
 	}
 
 	// Process files concurrently
