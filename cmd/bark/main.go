@@ -87,16 +87,13 @@ func main() {
 	}
 
 	// Determine paths to scan
-	// Priority: positional arguments > -p flag > current directory
+	// Combine -p flag and positional arguments; default to current directory
 	var scanPaths []string
-	if flag.NArg() > 0 {
-		// Use all positional arguments
-		scanPaths = flag.Args()
-	} else if *pathFlag != "" {
-		// Use -p flag
-		scanPaths = []string{*pathFlag}
-	} else {
-		// Default to current directory
+	if *pathFlag != "" {
+		scanPaths = append(scanPaths, *pathFlag)
+	}
+	scanPaths = append(scanPaths, flag.Args()...)
+	if len(scanPaths) == 0 {
 		scanPaths = []string{"."}
 	}
 
