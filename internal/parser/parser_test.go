@@ -155,7 +155,7 @@ func TestGetFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			result := getFileExtension(tt.path)
+			result := filepath.Ext(tt.path)
 			if result != tt.expected {
 				t.Errorf("Expected %s, got %s", tt.expected, result)
 			}

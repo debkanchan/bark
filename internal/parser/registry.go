@@ -70,24 +70,11 @@ func (r *Registry) GetLanguages() []languages.Language {
 	return r.languages
 }
 
-// getFileExtension extracts the file extension from a path
-func getFileExtension(path string) string {
-	for i := len(path) - 1; i >= 0; i-- {
-		if path[i] == '.' {
-			return path[i:]
-		}
-		if path[i] == '/' || path[i] == '\\' {
-			return ""
-		}
-	}
-	return ""
-}
-
 // GetLanguageByFilename returns the language for a given file path
 // It first tries extension lookup (fast), then falls back to filename pattern matching
 func (r *Registry) GetLanguageByFilename(filePath string) (*languages.Language, bool) {
 	// Extract extension
-	ext := getFileExtension(filePath)
+	ext := filepath.Ext(filePath)
 
 	// Fast path: try extension lookup first (O(1) hashmap)
 	if lang, found := r.extensionLookup[ext]; found {
