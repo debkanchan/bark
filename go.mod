@@ -24,4 +24,7 @@ require (
 	github.com/tree-sitter/tree-sitter-typescript v0.23.2
 )
 
-require github.com/mattn/go-pointer v0.0.1 // indirect
+require (
+	github.com/mattn/go-pointer v0.0.1 // indirect
+	github.com/tree-sitter/tree-sitter-php v0.24.2 // indirect
+)

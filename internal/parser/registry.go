@@ -34,6 +34,7 @@ func NewRegistry() *Registry {
 		languages.Zig(),
 		languages.Kotlin(),
 		languages.Docker(),
+		languages.PHP(),
 	}
 
 	// Build extension lookup map
