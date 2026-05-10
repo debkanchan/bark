@@ -8,7 +8,7 @@ branding:
 
 inputs:
   path:
-    description: "Path to scan for BARK comments"
+    description: "Path(s) to scan for BARK comments (space-separated for multiple)"
     required: false
     default: "."
   format:

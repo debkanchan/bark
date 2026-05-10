@@ -126,14 +126,14 @@ bark
 bark .
 ```
 
-**Scan specific path:**
+**Scan one or more paths:**
 
 ```bash
 bark ./src
-bark ./path/to/code
+bark ./src ./lib ./tests
 ```
 
-**Using flag syntax (alternative):**
+**Using flag syntax (single path only):**
 
 ```bash
 bark -path ./src
@@ -250,7 +250,7 @@ jobs:
 
 | Input              | Description                                    | Default  | Required |
 | ------------------ | ---------------------------------------------- | -------- | -------- |
-| `path`             | Path to scan for BARK comments                 | `.`      | No       |
+| `path`             | Path(s) to scan — space-separated for multiple | `.`      | No       |
 | `format`           | Output format (`text` or `json`)               | `text`   | No       |
 | `fail-on-findings` | Fail the build if BARK comments found          | `true`   | No       |
 | `version`          | Bark version to install (`latest` or `v1.0.0`) | `latest` | No       |
