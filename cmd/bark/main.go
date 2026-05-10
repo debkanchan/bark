@@ -32,9 +32,18 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage:\n")
 		fmt.Fprintf(os.Stderr, "  bark [options] [path...]            Scan for BARK comments\n")
 		fmt.Fprintf(os.Stderr, "  bark git-hook install               Install git pre-push hook\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook install-commit        Install git pre-commit hook (for GitHub Desktop)\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook uninstall             Uninstall git pre-push hook\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook uninstall-commit      Uninstall git pre-commit hook\n\n")
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook install-commit        Install git pre-commit hook (for GitHub Desktop)\n",
+		)
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook uninstall             Uninstall git pre-push hook\n",
+		)
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook uninstall-commit      Uninstall git pre-commit hook\n\n",
+		)
 		fmt.Fprintf(os.Stderr, "Arguments:\n")
 		fmt.Fprintf(
 			os.Stderr,
@@ -55,7 +64,10 @@ func main() {
 			"  bark -format json .                 # Scan current directory with JSON output\n",
 		)
 		fmt.Fprintf(os.Stderr, "  bark git-hook install               # Install pre-push hook\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook install-commit        # Install pre-commit hook (GitHub Desktop)\n")
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook install-commit        # Install pre-commit hook (GitHub Desktop)\n",
+		)
 		fmt.Fprintf(os.Stderr, "\nExit codes:\n")
 		fmt.Fprintf(os.Stderr, "  0 - No BARK comments found\n")
 		fmt.Fprintf(os.Stderr, "  1 - BARK comments found\n")
@@ -84,7 +96,10 @@ func main() {
 			uninstallGitHookCommit()
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown git-hook subcommand '%s'\n", subcommand)
-			fmt.Fprintf(os.Stderr, "Valid subcommands: install, install-commit, uninstall, uninstall-commit\n")
+			fmt.Fprintf(
+				os.Stderr,
+				"Valid subcommands: install, install-commit, uninstall, uninstall-commit\n",
+			)
 			os.Exit(exitError)
 		}
 		return
@@ -386,7 +401,8 @@ func installGitHookCommit() {
 	var newContent string
 
 	// Check if bark section already exists
-	if strings.Contains(existingContent, hookBeginMarker) && strings.Contains(existingContent, hookEndMarker) {
+	if strings.Contains(existingContent, hookBeginMarker) &&
+		strings.Contains(existingContent, hookEndMarker) {
 		// Replace existing bark section
 		lines := strings.Split(existingContent, "\n")
 		var result []string
@@ -453,7 +469,8 @@ func uninstallGitHookCommit() {
 	hookContent := string(content)
 
 	// Check if bark section exists
-	if !strings.Contains(hookContent, hookBeginMarker) || !strings.Contains(hookContent, hookEndMarker) {
+	if !strings.Contains(hookContent, hookBeginMarker) ||
+		!strings.Contains(hookContent, hookEndMarker) {
 		fmt.Println("ℹ️  No bark hook found in pre-commit - nothing to uninstall")
 		os.Exit(exitSuccess)
 	}
