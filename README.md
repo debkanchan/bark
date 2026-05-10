@@ -44,7 +44,7 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
 - 🌳 **Tree-sitter powered**: Accurate parsing using tree-sitter grammars
 - 🔧 **Modular architecture**: Separated core logic for easy integration
 - 📋 **Multiple output formats**: Text for CLI, JSON for CI/CD pipelines
-- 🎯 **Wide language support**: 18 languages including Go, JavaScript, TypeScript, Python, Java, Kotlin, C, C++, Bash, Rust, Zig, Lua, HCL, YAML, Docker, XML, TOML, JSON
+- 🎯**Wide language support**: 19 languages including Go, JavaScript, TypeScript, PHP, Python, Java, Kotlin, C, C++, Bash, Rust, Zig, Lua, HCL, YAML, Docker, XML, TOML, JSON
 - 🎬 **GitHub Action**: One-line integration for your CI/CD pipeline
 - 🪝 **Git Hooks**: Automatic pre-push hook installation
 
@@ -333,6 +333,7 @@ steps:
 | Go         | `.go`                                                      |
 | JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs`                              |
 | TypeScript | `.ts`, `.tsx`                                              |
+| PHP        | `.php`, `.phtml`, `.php3`, `.php4`, `.php5`                |
 | Python     | `.py`, `.pyw`                                              |
 | Java       | `.java`                                                    |
 | Kotlin     | `.kt`, `.kts`                                              |
