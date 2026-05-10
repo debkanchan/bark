@@ -1,26 +1,22 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/debkanchan/bark/internal/results"
 	"github.com/debkanchan/bark/internal/scanner"
 )
 
 const (
-	exitSuccess = 0
-	exitFound   = 1
-	exitError   = 2
+	exitSuccess     = 0
+	exitFound       = 1
+	exitError       = 2
+	defaultHookName = "pre-commit"
 )
 
 func main() {
-	// Define CLI flags
 	formatFlag := flag.String("format", "text", "Output format (text, json)")
 	flag.StringVar(formatFlag, "f", "text", "Output format (text, json) - shorthand")
 
@@ -30,19 +26,17 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Bark - Detect BARK comments in your code\n\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n")
-		fmt.Fprintf(os.Stderr, "  bark [options] [path...]            Scan for BARK comments\n")
-		fmt.Fprintf(os.Stderr, "  bark git-hook install               Install git pre-push hook\n")
 		fmt.Fprintf(
 			os.Stderr,
-			"  bark git-hook install-commit        Install git pre-commit hook (for GitHub Desktop)\n",
+			"  bark [options] [path...]                      Scan for BARK comments\n",
 		)
 		fmt.Fprintf(
 			os.Stderr,
-			"  bark git-hook uninstall             Uninstall git pre-push hook\n",
+			"  bark git-hook install [pre-commit|pre-push]   Install git hook (default: pre-commit)\n",
 		)
 		fmt.Fprintf(
 			os.Stderr,
-			"  bark git-hook uninstall-commit      Uninstall git pre-commit hook\n\n",
+			"  bark git-hook uninstall [pre-commit|pre-push] Uninstall git hook (default: pre-commit)\n\n",
 		)
 		fmt.Fprintf(os.Stderr, "Arguments:\n")
 		fmt.Fprintf(
@@ -53,20 +47,29 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  bark                               # Scan current directory\n")
-		fmt.Fprintf(os.Stderr, "  bark ./src                          # Scan src directory\n")
 		fmt.Fprintf(
 			os.Stderr,
-			"  bark main.go utils.go lib/          # Scan specific files and directories\n",
+			"  bark                                          # Scan current directory\n",
 		)
 		fmt.Fprintf(
 			os.Stderr,
-			"  bark -format json .                 # Scan current directory with JSON output\n",
+			"  bark ./src                                    # Scan src directory\n",
 		)
-		fmt.Fprintf(os.Stderr, "  bark git-hook install               # Install pre-push hook\n")
 		fmt.Fprintf(
 			os.Stderr,
-			"  bark git-hook install-commit        # Install pre-commit hook (GitHub Desktop)\n",
+			"  bark main.go utils.go lib/                    # Scan specific files and directories\n",
+		)
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark -format json .                           # Scan current directory with JSON output\n",
+		)
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook install                         # Install pre-commit hook (default)\n",
+		)
+		fmt.Fprintf(
+			os.Stderr,
+			"  bark git-hook install pre-push                # Install pre-push hook\n",
 		)
 		fmt.Fprintf(os.Stderr, "\nExit codes:\n")
 		fmt.Fprintf(os.Stderr, "  0 - No BARK comments found\n")
@@ -76,37 +79,37 @@ func main() {
 
 	flag.Parse()
 
-	// Check for subcommands
 	if flag.NArg() > 0 && flag.Arg(0) == "git-hook" {
 		if flag.NArg() < 2 {
 			fmt.Fprintf(os.Stderr, "Error: git-hook requires a subcommand (install or uninstall)\n")
-			fmt.Fprintf(os.Stderr, "Usage: bark git-hook install|uninstall\n")
+			fmt.Fprintf(os.Stderr, "Usage: bark git-hook install|uninstall [pre-commit|pre-push]\n")
 			os.Exit(exitError)
 		}
 
 		subcommand := flag.Arg(1)
+		hookName := defaultHookName
+		if flag.NArg() >= 3 {
+			hookName = flag.Arg(2)
+		}
+		if hookName != "pre-commit" && hookName != "pre-push" {
+			fmt.Fprintf(os.Stderr, "Error: Unknown hook name '%s'\n", hookName)
+			fmt.Fprintf(os.Stderr, "Valid hook names: pre-commit, pre-push\n")
+			os.Exit(exitError)
+		}
+
 		switch subcommand {
 		case "install":
-			installGitHook()
-		case "install-commit":
-			installGitHookCommit()
+			installGitHook(hookName)
 		case "uninstall":
-			uninstallGitHook()
-		case "uninstall-commit":
-			uninstallGitHookCommit()
+			uninstallGitHook(hookName)
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown git-hook subcommand '%s'\n", subcommand)
-			fmt.Fprintf(
-				os.Stderr,
-				"Valid subcommands: install, install-commit, uninstall, uninstall-commit\n",
-			)
+			fmt.Fprintf(os.Stderr, "Valid subcommands: install, uninstall\n")
 			os.Exit(exitError)
 		}
 		return
 	}
 
-	// Determine paths to scan
-	// Combine -p flag and positional arguments; default to current directory
 	var scanPaths []string
 	if *pathFlag != "" {
 		scanPaths = append(scanPaths, *pathFlag)
@@ -116,7 +119,6 @@ func main() {
 		scanPaths = []string{"."}
 	}
 
-	// Validate format
 	var formatter results.Formatter
 	switch *formatFlag {
 	case "text":
@@ -128,7 +130,6 @@ func main() {
 		os.Exit(exitError)
 	}
 
-	// Validate all paths exist
 	for _, p := range scanPaths {
 		_, err := os.Stat(p)
 		if err != nil {
@@ -137,11 +138,9 @@ func main() {
 		}
 	}
 
-	// Scan directories or files
 	s := scanner.NewScanner()
 	result := s.ScanPaths(scanPaths)
 
-	// Format and print results
 	output, err := formatter.Format(result)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error formatting output: %v\n", err)
@@ -150,378 +149,13 @@ func main() {
 
 	fmt.Print(output)
 
-	// Check for errors during scanning
-	errors := result.GetErrors()
-	if len(errors) > 0 {
+	if len(result.GetErrors()) > 0 {
 		os.Exit(exitError)
 	}
 
-	// Exit with code 1 if BARK comments found, 0 otherwise
 	if result.HasFindings() {
 		os.Exit(exitFound)
 	}
 
 	os.Exit(exitSuccess)
-}
-
-const (
-	hookBeginMarker = "# BEGIN bark hook"
-	hookEndMarker   = "# END bark hook"
-	hookContent     = `#!/bin/sh
-# BEGIN bark hook
-# Generated by bark - https://github.com/debkanchan/bark
-echo "🐕 Running bark to check for BARK comments..."
-bark .
-if [ $? -eq 1 ]; then
-    echo ""
-    echo "❌ Push blocked: BARK comments found"
-    echo "Please remove BARK comments before pushing"
-    echo "Run 'bark .' to see all BARK comments"
-    exit 1
-fi
-# END bark hook
-`
-	hookContentCommit = `#!/bin/sh
-# BEGIN bark hook
-# Generated by bark - https://github.com/debkanchan/bark
-echo "🐕 Running bark to check for BARK comments..."
-bark .
-if [ $? -eq 1 ]; then
-    echo ""
-    echo "❌ Commit blocked: BARK comments found"
-    echo "Please remove BARK comments before committing"
-    echo "Run 'bark .' to see all BARK comments"
-    exit 1
-fi
-# END bark hook
-`
-)
-
-func installGitHook() {
-	// Check if we're in a git repository
-	if _, err := os.Stat(".git"); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "Error: Not in a git repository\n")
-		fmt.Fprintf(os.Stderr, "Please run this command from the root of your git repository\n")
-		os.Exit(exitError)
-	}
-
-	hookPath := filepath.Join(".git", "hooks", "pre-push")
-
-	// Create backup if file exists
-	if _, err := os.Stat(hookPath); err == nil {
-		timestamp := time.Now().Format("20060102-150405")
-		backupPath := hookPath + ".bak." + timestamp
-
-		// Read existing file
-		content, err := os.ReadFile(hookPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading existing hook: %v\n", err)
-			os.Exit(exitError)
-		}
-
-		// Write backup
-		if err := os.WriteFile(backupPath, content, 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating backup: %v\n", err)
-			os.Exit(exitError)
-		}
-
-		fmt.Printf("📦 Backed up existing hook to: %s\n", backupPath)
-	}
-
-	// Read existing hook content
-	var existingContent string
-	if content, err := os.ReadFile(hookPath); err == nil {
-		existingContent = string(content)
-	}
-
-	var newContent string
-
-	// Check if bark section already exists
-	if strings.Contains(existingContent, hookBeginMarker) &&
-		strings.Contains(existingContent, hookEndMarker) {
-		// Replace existing bark section
-		lines := strings.Split(existingContent, "\n")
-		var result []string
-		inBarkSection := false
-		barkSectionReplaced := false
-
-		for _, line := range lines {
-			if strings.Contains(line, hookBeginMarker) {
-				if !barkSectionReplaced {
-					// Insert new bark section
-					result = append(result, strings.TrimSuffix(hookContent, "\n"))
-					barkSectionReplaced = true
-				}
-				inBarkSection = true
-				continue
-			}
-			if strings.Contains(line, hookEndMarker) {
-				inBarkSection = false
-				continue
-			}
-			if !inBarkSection {
-				result = append(result, line)
-			}
-		}
-		newContent = strings.Join(result, "\n")
-		fmt.Println("✅ Updated existing bark hook section")
-	} else if existingContent != "" {
-		// Append bark section to existing hook
-		newContent = strings.TrimRight(existingContent, "\n") + "\n\n" + hookContent
-		fmt.Println("✅ Added bark hook to existing pre-push hook")
-	} else {
-		// Create new hook file
-		newContent = hookContent
-		fmt.Println("✅ Created new pre-push hook with bark")
-	}
-
-	// Write the hook file
-	if err := os.WriteFile(hookPath, []byte(newContent), 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing hook file: %v\n", err)
-		os.Exit(exitError)
-	}
-
-	fmt.Println("\n🎉 Git hook installed successfully!")
-	fmt.Println("Bark will now check for BARK comments before each push")
-}
-
-func uninstallGitHook() {
-	hookPath := filepath.Join(".git", "hooks", "pre-push")
-
-	// Check if hook file exists
-	if _, err := os.Stat(hookPath); os.IsNotExist(err) {
-		fmt.Println("ℹ️  No pre-push hook found - nothing to uninstall")
-		os.Exit(exitSuccess)
-	}
-
-	// Read the hook file
-	content, err := os.ReadFile(hookPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading hook file: %v\n", err)
-		os.Exit(exitError)
-	}
-
-	hookContent := string(content)
-
-	// Check if bark section exists
-	if !strings.Contains(hookContent, hookBeginMarker) ||
-		!strings.Contains(hookContent, hookEndMarker) {
-		fmt.Println("ℹ️  No bark hook found in pre-push - nothing to uninstall")
-		os.Exit(exitSuccess)
-	}
-
-	// Create backup
-	timestamp := time.Now().Format("20060102-150405")
-	backupPath := hookPath + ".bak." + timestamp
-	if err := os.WriteFile(backupPath, content, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating backup: %v\n", err)
-		os.Exit(exitError)
-	}
-	fmt.Printf("📦 Backed up existing hook to: %s\n", backupPath)
-
-	// Remove bark section
-	scanner := bufio.NewScanner(strings.NewReader(hookContent))
-	var result []string
-	inBarkSection := false
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, hookBeginMarker) {
-			inBarkSection = true
-			continue
-		}
-		if strings.Contains(line, hookEndMarker) {
-			inBarkSection = false
-			continue
-		}
-		if !inBarkSection {
-			result = append(result, line)
-		}
-	}
-
-	newContent := strings.Join(result, "\n")
-	newContent = strings.TrimSpace(newContent)
-
-	// If file is now empty or only has shebang, delete it
-	if newContent == "" || newContent == "#!/bin/sh" || newContent == "#!/bin/bash" {
-		if err := os.Remove(hookPath); err != nil {
-			fmt.Fprintf(os.Stderr, "Error removing hook file: %v\n", err)
-			os.Exit(exitError)
-		}
-		fmt.Println("✅ Removed pre-push hook (file was empty after bark removal)")
-	} else {
-		// Write the modified content back
-		if err := os.WriteFile(hookPath, []byte(newContent+"\n"), 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing hook file: %v\n", err)
-			os.Exit(exitError)
-		}
-		fmt.Println("✅ Removed bark section from pre-push hook")
-	}
-
-	fmt.Println("\n🎉 Bark git hook uninstalled successfully!")
-}
-
-func installGitHookCommit() {
-	// Check if we're in a git repository
-	if _, err := os.Stat(".git"); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "Error: Not in a git repository\n")
-		fmt.Fprintf(os.Stderr, "Please run this command from the root of your git repository\n")
-		os.Exit(exitError)
-	}
-
-	hookPath := filepath.Join(".git", "hooks", "pre-commit")
-
-	// Create backup if file exists
-	if _, err := os.Stat(hookPath); err == nil {
-		timestamp := time.Now().Format("20060102-150405")
-		backupPath := hookPath + ".bak." + timestamp
-
-		// Read existing file
-		content, err := os.ReadFile(hookPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading existing hook: %v\n", err)
-			os.Exit(exitError)
-		}
-
-		// Write backup
-		if err := os.WriteFile(backupPath, content, 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating backup: %v\n", err)
-			os.Exit(exitError)
-		}
-
-		fmt.Printf("📦 Backed up existing hook to: %s\n", backupPath)
-	}
-
-	// Read existing hook content
-	var existingContent string
-	if content, err := os.ReadFile(hookPath); err == nil {
-		existingContent = string(content)
-	}
-
-	var newContent string
-
-	// Check if bark section already exists
-	if strings.Contains(existingContent, hookBeginMarker) &&
-		strings.Contains(existingContent, hookEndMarker) {
-		// Replace existing bark section
-		lines := strings.Split(existingContent, "\n")
-		var result []string
-		inBarkSection := false
-		barkSectionReplaced := false
-
-		for _, line := range lines {
-			if strings.Contains(line, hookBeginMarker) {
-				if !barkSectionReplaced {
-					// Insert new bark section
-					result = append(result, strings.TrimSuffix(hookContentCommit, "\n"))
-					barkSectionReplaced = true
-				}
-				inBarkSection = true
-				continue
-			}
-			if strings.Contains(line, hookEndMarker) {
-				inBarkSection = false
-				continue
-			}
-			if !inBarkSection {
-				result = append(result, line)
-			}
-		}
-		newContent = strings.Join(result, "\n")
-		fmt.Println("✅ Updated existing bark hook section")
-	} else if existingContent != "" {
-		// Append bark section to existing hook
-		newContent = strings.TrimRight(existingContent, "\n") + "\n\n" + hookContentCommit
-		fmt.Println("✅ Added bark hook to existing pre-commit hook")
-	} else {
-		// Create new hook file
-		newContent = hookContentCommit
-		fmt.Println("✅ Created new pre-commit hook with bark")
-	}
-
-	// Write the hook file
-	if err := os.WriteFile(hookPath, []byte(newContent), 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing hook file: %v\n", err)
-		os.Exit(exitError)
-	}
-
-	fmt.Println("\n🎉 Git pre-commit hook installed successfully!")
-	fmt.Println("Bark will now check for BARK comments before each commit")
-	fmt.Println("This hook works with GitHub Desktop and other Git clients")
-}
-
-func uninstallGitHookCommit() {
-	hookPath := filepath.Join(".git", "hooks", "pre-commit")
-
-	// Check if hook file exists
-	if _, err := os.Stat(hookPath); os.IsNotExist(err) {
-		fmt.Println("ℹ️  No pre-commit hook found - nothing to uninstall")
-		os.Exit(exitSuccess)
-	}
-
-	// Read the hook file
-	content, err := os.ReadFile(hookPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading hook file: %v\n", err)
-		os.Exit(exitError)
-	}
-
-	hookContent := string(content)
-
-	// Check if bark section exists
-	if !strings.Contains(hookContent, hookBeginMarker) ||
-		!strings.Contains(hookContent, hookEndMarker) {
-		fmt.Println("ℹ️  No bark hook found in pre-commit - nothing to uninstall")
-		os.Exit(exitSuccess)
-	}
-
-	// Create backup
-	timestamp := time.Now().Format("20060102-150405")
-	backupPath := hookPath + ".bak." + timestamp
-	if err := os.WriteFile(backupPath, content, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating backup: %v\n", err)
-		os.Exit(exitError)
-	}
-	fmt.Printf("📦 Backed up existing hook to: %s\n", backupPath)
-
-	// Remove bark section
-	scanner := bufio.NewScanner(strings.NewReader(hookContent))
-	var result []string
-	inBarkSection := false
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, hookBeginMarker) {
-			inBarkSection = true
-			continue
-		}
-		if strings.Contains(line, hookEndMarker) {
-			inBarkSection = false
-			continue
-		}
-		if !inBarkSection {
-			result = append(result, line)
-		}
-	}
-
-	newContent := strings.Join(result, "\n")
-	newContent = strings.TrimSpace(newContent)
-
-	// If file is now empty or only has shebang, delete it
-	if newContent == "" || newContent == "#!/bin/sh" || newContent == "#!/bin/bash" {
-		if err := os.Remove(hookPath); err != nil {
-			fmt.Fprintf(os.Stderr, "Error removing hook file: %v\n", err)
-			os.Exit(exitError)
-		}
-		fmt.Println("✅ Removed pre-commit hook (file was empty after bark removal)")
-	} else {
-		// Write the modified content back
-		if err := os.WriteFile(hookPath, []byte(newContent+"\n"), 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing hook file: %v\n", err)
-			os.Exit(exitError)
-		}
-		fmt.Println("✅ Removed bark section from pre-commit hook")
-	}
-
-	fmt.Println("\n🎉 Bark git pre-commit hook uninstalled successfully!")
 }

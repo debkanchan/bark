@@ -16,7 +16,9 @@ Bark follows standard Go project layout with a modular architecture:
 
 ```text
 bark/
-├── cmd/bark/              # CLI entry point with git hook commands
+├── cmd/bark/
+│   ├── main.go            # CLI entry point, flag parsing, scan logic
+│   └── git-hooks.go       # Git hook install/uninstall logic and hook scripts
 ├── internal/
 │   ├── parser/            # Tree-sitter integration
 │   │   ├── registry.go    # Language registry
@@ -34,7 +36,7 @@ bark/
 - **Parser**: Uses tree-sitter queries to extract comments from source files
 - **Scanner**: Concurrent file processing with worker pool pattern
 - **Formatters**: Interface-based output formatting (text, JSON)
-- **Git Hooks**: Smart installation with marker-based merging
+- **Git Hooks** (`git-hooks.go`): Hook scripts, install/uninstall logic with marker-based merging
 - **GitHub Action**: Composite action using preinstalled Go (no Docker!)
 
 ## Development
