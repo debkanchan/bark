@@ -8,7 +8,7 @@ import (
 func PHP() Language {
 	return Language{
 		Name:       "PHP",
-		Extensions: []string{".php"},
+		Extensions: []string{".php", ".phtml", ".php3", ".php4", ".php5"},
 		Parser:     sitter.NewLanguage(tree_sitter_php.LanguagePHP()),
 		Query:      "((comment) @comment)",
 	}
