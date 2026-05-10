@@ -14,10 +14,16 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
     - [Build Locally](#build-locally)
   - [Usage](#usage)
     - [Recommended: Install Git Hook (Set and Forget!)](#recommended-install-git-hook-set-and-forget)
+      - [For GitHub Desktop Users (Pre-Commit Hook)](#for-github-desktop-users-pre-commit-hook)
+      - [For CLI Git Users (Pre-Push Hook)](#for-cli-git-users-pre-push-hook)
+      - [Why Two Options?](#why-two-options)
     - [Add BARK Comments to Your Code](#add-bark-comments-to-your-code)
     - [Manual Scanning (CLI)](#manual-scanning-cli)
     - [Output Formats](#output-formats)
     - [Git Hook Commands](#git-hook-commands)
+      - [Pre-Commit Hook (Recommended for GitHub Desktop)](#pre-commit-hook-recommended-for-github-desktop)
+      - [Pre-Push Hook (For CLI Git Users)](#pre-push-hook-for-cli-git-users)
+      - [How it works](#how-it-works)
     - [Exit Codes](#exit-codes)
   - [GitHub Action](#github-action)
     - [Basic Usage](#basic-usage)
@@ -25,16 +31,7 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
     - [Action Inputs](#action-inputs)
     - [Examples](#examples)
   - [Supported Languages](#supported-languages)
-  - [Architecture](#architecture)
-    - [Key Components](#key-components)
-  - [Development](#development)
-    - [Running Tests](#running-tests)
-    - [Testing Git Hooks Locally](#testing-git-hooks-locally)
-    - [Adding a New Language](#adding-a-new-language)
-    - [Build Commands](#build-commands)
   - [Contributing](#contributing)
-    - [Contribution Ideas](#contribution-ideas)
-  - [License](#license)
   - [Why "Bark"?](#why-bark)
 
 ## Features
@@ -209,6 +206,7 @@ bark git-hook install-commit
 ```
 
 This will:
+
 - ✅ Create or update `.git/hooks/pre-commit`
 - ✅ Safely merge with existing hooks using markers
 - ✅ Back up any existing hook before modification
@@ -231,6 +229,7 @@ bark git-hook install
 ```
 
 This will:
+
 - ✅ Create or update `.git/hooks/pre-push`
 - ✅ Safely merge with existing hooks using markers
 - ✅ Back up any existing hook before modification
@@ -279,7 +278,7 @@ jobs:
 ```yaml
 - uses: debkanchan/bark@v1
   with:
-    path: './src'
+    path: "./src"
 ```
 
 **JSON output:**
@@ -287,7 +286,7 @@ jobs:
 ```yaml
 - uses: debkanchan/bark@v1
   with:
-    format: 'json'
+    format: "json"
 ```
 
 **Report only (don't fail the build):**
@@ -295,7 +294,7 @@ jobs:
 ```yaml
 - uses: debkanchan/bark@v1
   with:
-    fail-on-findings: 'false'
+    fail-on-findings: "false"
 ```
 
 **Specific version:**
@@ -303,17 +302,17 @@ jobs:
 ```yaml
 - uses: debkanchan/bark@v1
   with:
-    version: 'v1.0.0'
+    version: "v1.0.0"
 ```
 
 ### Action Inputs
 
-| Input | Description | Default | Required |
-|-------|-------------|---------|----------|
-| `path` | Path to scan for BARK comments | `.` | No |
-| `format` | Output format (`text` or `json`) | `text` | No |
-| `fail-on-findings` | Fail the build if BARK comments found | `true` | No |
-| `version` | Bark version to install (`latest` or `v1.0.0`) | `latest` | No |
+| Input              | Description                                    | Default  | Required |
+| ------------------ | ---------------------------------------------- | -------- | -------- |
+| `path`             | Path to scan for BARK comments                 | `.`      | No       |
+| `format`           | Output format (`text` or `json`)               | `text`   | No       |
+| `fail-on-findings` | Fail the build if BARK comments found          | `true`   | No       |
+| `version`          | Bark version to install (`latest` or `v1.0.0`) | `latest` | No       |
 
 ### Examples
 
@@ -324,9 +323,9 @@ name: Code Quality
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   bark-check:
@@ -336,8 +335,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: debkanchan/bark@v1
         with:
-          path: '.'
-          format: 'text'
+          path: "."
+          format: "text"
 ```
 
 **Matrix strategy - scan multiple directories:**
@@ -348,7 +347,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        directory: ['./frontend', './backend', './shared']
+        directory: ["./frontend", "./backend", "./shared"]
     steps:
       - uses: actions/checkout@v4
       - uses: debkanchan/bark@v1
@@ -373,7 +372,7 @@ steps:
 ## Supported Languages
 
 | Language   | Extensions                                                 |
-| ---------- | -----------------------------------------------------------|
+| ---------- | ---------------------------------------------------------- |
 | Go         | `.go`                                                      |
 | JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs`                              |
 | TypeScript | `.ts`, `.tsx`                                              |
@@ -394,144 +393,9 @@ steps:
 | TOML       | `.toml`                                                    |
 | JSON       | `.json`, `.jsonc`                                          |
 
-## Architecture
-
-Bark follows standard Go project layout with a modular architecture:
-
-```text
-bark/
-├── cmd/bark/              # CLI entry point with git hook commands
-├── internal/
-│   ├── parser/            # Tree-sitter integration
-│   │   ├── registry.go    # Language registry
-│   │   ├── parser.go      # Comment extraction
-│   │   └── languages/     # Individual language configs
-│   ├── scanner/           # Concurrent file scanner with worker pool
-│   └── results/           # Result types and formatters (text, JSON)
-├── action.yml             # GitHub Action definition (composite)
-└── .github/workflows/     # CI/CD workflows
-```
-
-### Key Components
-
-- **Language Registry**: Extensible registry mapping file extensions to tree-sitter parsers
-- **Parser**: Uses tree-sitter queries to extract comments from source files
-- **Scanner**: Concurrent file processing with worker pool pattern
-- **Formatters**: Interface-based output formatting (text, JSON)
-- **Git Hooks**: Smart installation with marker-based merging
-- **GitHub Action**: Composite action using preinstalled Go (no Docker!)
-
-## Development
-
-### Running Tests
-
-```bash
-# Run all tests
-go test ./...
-
-# Run with coverage
-go test -cover ./...
-
-# Run specific package
-go test ./internal/parser
-go test ./internal/scanner
-go test ./internal/results
-
-# Using Makefile
-make test
-make test-coverage
-```
-
-### Testing Git Hooks Locally
-
-```bash
-# Install the hook in your bark repository
-bark git-hook install
-
-# Create a test commit with BARK comments
-echo "// BARK test" >> test.go
-git add test.go
-git commit -m "test"
-
-# Try to push (should be blocked)
-git push
-
-# Uninstall when done testing
-bark git-hook uninstall
-```
-
-### Adding a New Language
-
-1. **Install the tree-sitter parser binding:**
-
-   ```bash
-   go get github.com/tree-sitter/tree-sitter-{language}/bindings/go
-   ```
-
-2. **Create a new file** `internal/parser/languages/{language}.go`:
-
-   ```go
-   package languages
-
-   import (
-       sitter "github.com/tree-sitter/go-tree-sitter"
-       tree_sitter "github.com/tree-sitter/tree-sitter-{language}/bindings/go"
-   )
-
-   func YourLanguage() Language {
-       return Language{
-           Name:       "YourLanguage",
-           Extensions: []string{".ext"},
-           Parser:     sitter.NewLanguage(tree_sitter.Language()),
-           Query:      "((comment) @comment)",
-       }
-   }
-   ```
-
-3. **Add to the registry** in `internal/parser/registry.go`:
-
-   ```go
-   languageList := []languages.Language{
-       // ... existing languages
-       languages.YourLanguage(),
-   }
-   ```
-
-4. **Test it:**
-
-   ```bash
-   go build -o bark ./cmd/bark
-   ./bark path/to/file.ext
-   ```
-
-### Build Commands
-
-Using the Makefile:
-
-```bash
-make build              # Build the binary
-make test               # Run all tests
-make test-coverage      # Run tests with coverage report
-make run-testdata       # Test on sample files
-make install            # Install globally
-make clean              # Clean build artifacts
-```
-
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Contribution Ideas
-
-- Add support for more programming languages
-- Improve error messages
-- Add configuration file support
-- Enhance test coverage
-- Improve documentation
-
-## License
-
-GNU Affero General Public License - see [LICENSE](LICENSE) file for details
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Why "Bark"?
 
