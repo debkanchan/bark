@@ -1,5 +1,5 @@
 name: "🐕 Bark! - Save yourself from production embarrassments"
-description: "Check for BARK comments in your code before merging"
+description: "A REMOVE BEFORE FLIGHT linter. Checks for BARK comments in your code before they reach production"
 author: "debkanchan"
 
 branding:
