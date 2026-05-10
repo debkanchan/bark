@@ -12,12 +12,14 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 1
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.5"
+          go-version: 1.24.5
 
       - name: Run all tests
         run: go test -v ./...
@@ -28,32 +30,45 @@ jobs:
   build:
     name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - goos: linux
             goarch: amd64
+            os: ubuntu-latest
           - goos: linux
             goarch: arm64
+            os: ubuntu-latest
+            cc: aarch64-linux-gnu-gcc
           - goos: darwin
             goarch: amd64
+            os: macos-15-large
           - goos: darwin
             goarch: arm64
+            os: macos-latest
           - goos: windows
             goarch: amd64
+            os: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.5"
+          go-version: 1.24.5
+
+      - name: Install ARM cross-compiler
+        if: matrix.cc != ''
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Build binary
+        shell: bash
         env:
+          CGO_ENABLED: 1
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          CC: ${{ matrix.cc }}
         run: |
           OUTPUT_NAME="bark-${{ matrix.goos }}-${{ matrix.goarch }}"
           if [ "${{ matrix.goos }}" = "windows" ]; then
@@ -63,14 +78,22 @@ jobs:
           go build -ldflags="-s -w" -o "$OUTPUT_NAME" ./cmd/bark
 
           # Create checksum for binary
-          sha256sum "$OUTPUT_NAME" > "${OUTPUT_NAME}.sha256"
+          if command -v sha256sum &>/dev/null; then
+            sha256sum "$OUTPUT_NAME" > "${OUTPUT_NAME}.sha256"
+          else
+            shasum -a 256 "$OUTPUT_NAME" > "${OUTPUT_NAME}.sha256"
+          fi
 
           # Create tar.gz archive
           ARCHIVE_NAME="bark-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
           tar -czf "$ARCHIVE_NAME" "$OUTPUT_NAME"
 
           # Create checksum for archive
-          sha256sum "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
+          if command -v sha256sum &>/dev/null; then
+            sha256sum "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
+          else
+            shasum -a 256 "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
+          fi
 
           echo "Built: $OUTPUT_NAME"
           ls -lh "$OUTPUT_NAME" "$ARCHIVE_NAME"
