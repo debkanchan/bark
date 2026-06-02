@@ -1,0 +1,21 @@
+{
+  "name": "@debkanchan/bark-darwin-arm64",
+  "version": "0.0.0",
+  "description": "macOS arm64 (Apple Silicon) binary for the bark CLI. Installed automatically by @debkanchan/bark.",
+  "homepage": "https://github.com/debkanchan/bark#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/debkanchan/bark.git",
+    "directory": "npm/bark-darwin-arm64"
+  },
+  "license": "AGPL-3.0-or-later",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "bin"
+  ]
+}

@@ -181,3 +181,10 @@ Temporary Items
 
 # End of https://www.toptal.com/developers/gitignore/api/go,linux,macos,jetbrains+all,visualstudiocode
 dist/
+
+# npm: platform binaries are injected at release time, never committed
+# (scoped to the bark-<platform> packages so the main launcher npm/bark/bin/bark is kept)
+npm/bark-*/bin/bark
+npm/bark-*/bin/bark.exe
+npm/**/node_modules/
+*.tgz

@@ -10,8 +10,10 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Installation](#installation)
-    - [Install from Source](#install-from-source)
-    - [Build Locally](#build-locally)
+    - [Homebrew (macOS / Linux)](#homebrew-macos--linux)
+    - [npm (any platform with Node.js)](#npm-any-platform-with-nodejs)
+    - [Prebuilt binary (manual)](#prebuilt-binary-manual)
+    - [From source](#from-source)
   - [Usage](#usage)
     - [Recommended: Install Git Hook (Set and Forget!)](#recommended-install-git-hook-set-and-forget)
     - [Add BARK Comments to Your Code](#add-bark-comments-to-your-code)
@@ -41,13 +43,40 @@ Bark is an **"embarrassment linter"** that detects `BARK` comments in your code.
 
 ## Installation
 
-### Install from Source
+Pick whichever fits your setup — both install a prebuilt binary, no compiler required.
+
+### Homebrew (macOS / Linux)
+
+```bash
+brew install debkanchan/tap/bark
+```
+
+### npm (any platform with Node.js)
+
+```bash
+npm install -g @debkanchan/bark
+```
+
+The npm package ships a tiny launcher plus a per-platform binary selected
+automatically (linux/macOS x64 & arm64, Windows x64).
+
+### Prebuilt binary (manual)
+
+Download the archive for your OS/arch from the
+[latest release](https://github.com/debkanchan/bark/releases/latest), extract it,
+and move the binary onto your `PATH`.
+
+### From source
+
+> **Note:** building from source requires a C compiler (gcc/clang). `bark` uses
+> tree-sitter via CGO, so `CGO_ENABLED=1` and a C toolchain are needed. The
+> Homebrew and npm installs above avoid this entirely.
 
 ```bash
 go install github.com/debkanchan/bark/cmd/bark@latest
 ```
 
-### Build Locally
+Or build a local checkout:
 
 ```bash
 git clone https://github.com/debkanchan/bark.git
