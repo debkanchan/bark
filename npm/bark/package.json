@@ -1,0 +1,40 @@
+{
+  "name": "@debkanchan/bark",
+  "version": "0.0.0",
+  "description": "Bark! - an embarrassment linter that detects BARK comments in your code so you never push temporary code by accident.",
+  "keywords": [
+    "linter",
+    "git-hook",
+    "pre-commit",
+    "tree-sitter",
+    "cli",
+    "bark"
+  ],
+  "homepage": "https://github.com/debkanchan/bark#readme",
+  "bugs": {
+    "url": "https://github.com/debkanchan/bark/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/debkanchan/bark.git",
+    "directory": "npm/bark"
+  },
+  "license": "AGPL-3.0-or-later",
+  "type": "commonjs",
+  "bin": {
+    "bark": "bin/bark"
+  },
+  "files": [
+    "bin/bark"
+  ],
+  "engines": {
+    "node": ">=14"
+  },
+  "optionalDependencies": {
+    "@debkanchan/bark-linux-x64": "0.0.0",
+    "@debkanchan/bark-linux-arm64": "0.0.0",
+    "@debkanchan/bark-darwin-x64": "0.0.0",
+    "@debkanchan/bark-darwin-arm64": "0.0.0",
+    "@debkanchan/bark-win32-x64": "0.0.0"
+  }
+}

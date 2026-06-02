@@ -1,0 +1,68 @@
+#!/usr/bin/env node
+"use strict";
+
+// Thin launcher for the `bark` CLI.
+//
+// The real binary is a compiled Go executable shipped in a per-platform
+// package (e.g. @debkanchan/bark-darwin-arm64). Those packages are listed as
+// optionalDependencies of @debkanchan/bark and gated by "os"/"cpu", so npm
+// installs only the one matching the host. This script resolves that binary
+// and hands over execution to it.
+
+const { spawnSync } = require("child_process");
+
+// node platform/arch -> per-platform package name
+const PACKAGES = {
+  "linux-x64": "@debkanchan/bark-linux-x64",
+  "linux-arm64": "@debkanchan/bark-linux-arm64",
+  "darwin-x64": "@debkanchan/bark-darwin-x64",
+  "darwin-arm64": "@debkanchan/bark-darwin-arm64",
+  "win32-x64": "@debkanchan/bark-win32-x64",
+};
+
+function resolveBinary() {
+  const key = `${process.platform}-${process.arch}`;
+  const pkg = PACKAGES[key];
+
+  if (!pkg) {
+    throw new Error(
+      `bark: unsupported platform "${key}". ` +
+        `Supported: ${Object.keys(PACKAGES).join(", ")}.\n` +
+        `Please open an issue at https://github.com/debkanchan/bark/issues`
+    );
+  }
+
+  const binName = process.platform === "win32" ? "bark.exe" : "bark";
+
+  try {
+    return require.resolve(`${pkg}/bin/${binName}`);
+  } catch (_err) {
+    throw new Error(
+      `bark: the platform package "${pkg}" is not installed.\n` +
+        `This usually means the optional dependency failed to install.\n` +
+        `Try reinstalling: npm install -g @debkanchan/bark\n` +
+        `(If you used --no-optional or --ignore-optional, drop that flag.)`
+    );
+  }
+}
+
+let binary;
+try {
+  binary = resolveBinary();
+} catch (err) {
+  process.stderr.write(`${err.message}\n`);
+  process.exit(1);
+}
+
+const result = spawnSync(binary, process.argv.slice(2), { stdio: "inherit" });
+
+if (result.error) {
+  process.stderr.write(`bark: failed to run binary: ${result.error.message}\n`);
+  process.exit(1);
+}
+
+// Propagate the child's exit status (signal -> conventional 128+signal code).
+if (typeof result.status === "number") {
+  process.exit(result.status);
+}
+process.exit(1);
